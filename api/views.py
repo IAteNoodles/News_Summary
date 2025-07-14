@@ -9,6 +9,10 @@ from . import services
 from .models import Article
 from .serializers import ArticleSerializer
 from django.db.models import QuerySet
+from .scraper import scrape_article_text # Import the scraper
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -37,13 +41,39 @@ class LatestNewsView(APIView):
             # Ensure article_data is a dictionary before processing
             if not isinstance(article_data, dict):
                 continue
-            original_content = article_data.get('content') or ""
-            summary = services.summarize_text(original_content)
+            
+            # --- Scraper Integration ---
+            text_to_summarize = None
+            scraped_content = scrape_article_text(article_data.get('url'))
+            
+            if scraped_content:
+                text_to_summarize = scraped_content
+            else:
+                text_to_summarize = article_data.get('content') or article_data.get('description')
+
+            # --- End Scraper Integration ---
+
+            # --- New Summarization Logic ---
+            summary = ""
+            original_description = article_data.get('description') or ""
+
+            if text_to_summarize and text_to_summarize.strip():
+                # Only run the summarizer if we have actual text
+                summary = services.summarize_text(text_to_summarize)
+                logger.info(f"SUCCESS (Summarizer): Summarized {article_data.get('url')}")
+            else:
+                logger.warning(f"No content found for summarization for {article_data.get('url')}.")
+
+            # Final fallback: if summary is still empty, use the original description.
+            if not summary.strip():
+                summary = original_description or "No summary available."
+                logger.info(f"FALLBACK (Final): Using API description for {article_data.get('url')}")
+            # --- End New Summarization Logic ---
+
             articles.append({
                 'title': article_data.get('title'),
                 'url': article_data.get('url'),
                 'source_name': article_data.get('source', {}).get('name'),
-                'original_content': original_content,
                 'summary': summary,
                 'published_at': article_data.get('publishedAt'),
             })
@@ -71,13 +101,38 @@ class SearchNewsView(APIView):
             # Ensure article_data is a dictionary before processing
             if not isinstance(article_data, dict):
                 continue
-            original_content = article_data.get('content') or ""
-            summary = services.summarize_text(original_content)
+
+            # --- Scraper Integration ---
+            text_to_summarize = None
+            scraped_content = scrape_article_text(article_data.get('url'))
+
+            if scraped_content:
+                text_to_summarize = scraped_content
+            else:
+                text_to_summarize = article_data.get('content') or article_data.get('description')
+            # --- End Scraper Integration ---
+
+            # --- New Summarization Logic ---
+            summary = ""
+            original_description = article_data.get('description') or ""
+
+            if text_to_summarize and text_to_summarize.strip():
+                # Only run the summarizer if we have actual text
+                summary = services.summarize_text(text_to_summarize)
+                logger.info(f"SUCCESS (Summarizer): Summarized {article_data.get('url')}")
+            else:
+                logger.warning(f"No content found for summarization for {article_data.get('url')}.")
+
+            # Final fallback: if summary is still empty, use the original description.
+            if not summary.strip():
+                summary = original_description or "No summary available."
+                logger.info(f"FALLBACK (Final): Using API description for {article_data.get('url')}")
+            # --- End New Summarization Logic ---
+
             articles.append({
                 'title': article_data.get('title'),
                 'url': article_data.get('url'),
                 'source_name': article_data.get('source', {}).get('name'),
-                'original_content': original_content,
                 'summary': summary,
                 'published_at': article_data.get('publishedAt'),
             })
