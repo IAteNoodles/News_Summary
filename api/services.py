@@ -1,8 +1,13 @@
 import os
 import requests
 from dotenv import load_dotenv
+from transformers import pipeline
 
 load_dotenv()
+
+# Global variable to hold the summarization pipeline
+# This uses lazy loading: the model is only loaded into memory when first needed.
+summarizer_pipeline = None
 
 def fetch_from_news_api(search_term=None):
     """
@@ -31,15 +36,32 @@ def fetch_from_news_api(search_term=None):
 
 def summarize_text(text):
     """
-    Placeholder for a text summarization function.
-    In a real implementation, this would call an AI summarization service.
-    For this project, we'll just return the first 150 characters.
+    Summarizes the given text using a lightweight DistilBART model for speed.
     """
+    global summarizer_pipeline
+
+    # Lazy-load the pipeline to avoid loading the model on server startup
+    if summarizer_pipeline is None:
+        print("Initializing lightweight summarization pipeline (distilbart)...")
+        # This model is much smaller and faster than Phi-4
+        summarizer_pipeline = pipeline(
+            "summarization",
+            model="sshleifer/distilbart-cnn-12-6",
+        )
+        print("Pipeline initialized.")
+
     if not text or not isinstance(text, str):
-        return ""
-    
-    # A simple truncation as a stand-in for a real summary
-    summary = text[:150]
-    if len(text) > 150:
-        summary += "..."
-    return summary
+        return "No text provided for summarization."
+
+    try:
+        print("Generating summary with distilbart...")
+        # The summarization pipeline is simpler and takes the text directly.
+        # It also has its own parameters for controlling length.
+        results = summarizer_pipeline(text, max_length=150, min_length=30, do_sample=False)
+        summary = results[0]['summary_text']
+        print("Summary generated successfully.")
+        return summary.strip()
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        # Fallback to simple truncation if the model fails
+        return text[:150] + "..."
