@@ -5,10 +5,15 @@ This project is a Django-based REST API that fetches news from an external sourc
 ## Core Technologies
 
 *   **Backend**: Django, Django REST Framework
-*   **Database**: MongoDB (via `djongo`)
+*   **Database**: PostgreSQL (via `psycopg2-binary`)
 *   **Authentication**: JSON Web Tokens (`djangorestframework-simplejwt`)
 *   **AI Summarization**: `transformers` library
 *   **Web Scraping**: `requests` and `BeautifulSoup`
+
+## Requirements
+
+*   **Python**: 3.11+
+*   **PostgreSQL**: A running instance of PostgreSQL.
 
 ## Setup and Installation
 
@@ -30,13 +35,17 @@ This project is a Django-based REST API that fetches news from an external sourc
     ```
 
 4.  **Configure Environment Variables:**
-    Create a `.env` file in the project root directory. This file will hold your sensitive information. Add the following variables:
+    Create a `.env` file in the project root directory. This file will hold your sensitive information. Add the following variables, adjusting the database values for your local PostgreSQL setup:
 
     ```
     SECRET_KEY='your-django-secret-key'
     NEWS_API_KEY='your-newsapi-key'
-    DATABASE_NAME='news-summary-db'
-    DATABASE_HOST='mongodb://localhost:27017/'
+    
+    DB_NAME='news_summary_db'
+    DB_USER='your_postgres_user'
+    DB_PASSWORD='your_postgres_password'
+    DB_HOST='localhost'
+    DB_PORT='5432'
     ```
     *   You can generate a new Django `SECRET_KEY` using an online generator.
     *   Get your `NEWS_API_KEY` from [newsapi.org](https://newsapi.org/).
@@ -69,6 +78,12 @@ All endpoints require JWT authentication. You must include an `Authorization: Be
 *   **`POST /api/token/refresh/`**
     *   Get a new access token using a refresh token.
     *   **Body**: `{ "refresh": "your_refresh_token" }`
+
+**Note on Token Lifetimes:** By default, `djangorestframework-simplejwt` has the following token lifetimes:
+*   **Access Token**: 5 minutes
+*   **Refresh Token**: 24 hours
+
+These can be configured in `settings.py` if needed.
 
 ### News
 
