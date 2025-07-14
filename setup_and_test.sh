@@ -102,10 +102,20 @@ print_success "Successfully logged in and obtained token."
 
 # Search for an article
 echo "Searching for articles..."
-ARTICLE_JSON=$(curl -s -X GET "http://127.0.0.1:8000/api/search/?q=Django" -H "Authorization: Bearer $TOKEN" | jq '.[0]')
+# Make the curl call more robust by capturing the HTTP status and body separately
+SEARCH_RESPONSE=$(curl -s -w "
+%{http_code}" -X GET "http://127.0.0.1:8000/api/search/?q=Django" -H "Authorization: Bearer $TOKEN")
+SEARCH_BODY=$(echo "$SEARCH_RESPONSE" | sed '$d') # Get all but the last line
+SEARCH_STATUS=$(echo "$SEARCH_RESPONSE" | tail -n 1) # Get the last line
+
+if [ "$SEARCH_STATUS" != "200" ]; then
+    print_error "Failed to search for articles. Server responded with HTTP $SEARCH_STATUS. Body: $SEARCH_BODY"
+fi
+
+ARTICLE_JSON=$(echo "$SEARCH_BODY" | jq '.[0]')
 
 if [ -z "$ARTICLE_JSON" ] || [ "$ARTICLE_JSON" == "null" ]; then
-    print_error "Failed to fetch articles from search."
+    print_error "Successfully called search API, but no articles were returned for the query."
 fi
 print_success "Successfully searched for articles."
 
