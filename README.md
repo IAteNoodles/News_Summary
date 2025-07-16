@@ -20,7 +20,7 @@ This project is a Django-based REST API that fetches news from an external sourc
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/IAteNoodles/News_Summary.git
-    cd DjangoIntern
+    cd News_Summary
     ```
 
 2.  **Create and activate a virtual environment:**
@@ -101,3 +101,188 @@ These can be configured in `settings.py` if needed.
 
 *   **`GET /api/saved/`**
     *   Retrieves a list of all articles you have saved.
+
+## Project Structure
+
+This project is organized into several modules, each with its own specific purpose:
+
+```
+DjangoIntern/
+├── README.md                    # Main project documentation
+├── requirements.txt             # Python dependencies
+├── manage.py                    # Django management script
+├── .env                        # Environment variables (not in repo)
+├── .gitignore                  # Git ignore rules
+├── news_summary_project/       # Django project configuration
+│   ├── README.md               # Project module documentation
+│   ├── settings.py             # Django settings
+│   ├── urls.py                 # Root URL configuration
+│   ├── wsgi.py                 # WSGI configuration
+│   └── asgi.py                 # ASGI configuration
+├── api/                        # Main API application
+│   ├── README.md               # API module documentation
+│   ├── models.py               # Database models
+│   ├── views.py                # API endpoints
+│   ├── serializers.py          # Data serializers
+│   ├── services.py             # External service integration
+│   ├── scraper.py              # Web scraping functionality
+│   ├── urls.py                 # API URL routing
+│   ├── admin.py                # Django admin configuration
+│   ├── apps.py                 # App configuration
+│   ├── tests.py                # Unit tests
+│   ├── management/             # Custom management commands
+│   │   ├── README.md           # Management commands documentation
+│   │   └── commands/
+│   │       └── clear_articles.py
+│   └── migrations/             # Database migrations
+├── test_files/                 # Development testing scripts
+│   ├── api_test_client.py      # API testing client
+│   ├── test_news_api.py        # NewsAPI testing
+│   └── test_single_scraper.py  # Scraper testing
+└── scripts/                    # Deployment and setup scripts
+    ├── setup_and_test.sh       # Setup automation
+    └── full_clone_test.sh      # Complete testing script
+```
+
+## Module Documentation
+
+Each module has its own detailed README file:
+
+- **[`news_summary_project/README.md`](news_summary_project/README.md)**: Django project configuration, settings, security, and deployment
+- **[`api/README.md`](api/README.md)**: API endpoints, models, services, scraping, and authentication
+- **[`api/management/README.md`](api/management/README.md)**: Custom Django management commands
+
+## Key Features
+
+### 🔐 Secure Authentication
+- JWT-based authentication with refresh tokens
+- User registration and login endpoints
+- Token expiration and refresh mechanisms
+
+### 🤖 AI-Powered Summarization
+- Uses HuggingFace transformers for article summarization
+- Model: `sshleifer/distilbart-cnn-12-6`
+- Intelligent fallback to original descriptions
+
+### 🕷️ Intelligent Web Scraping
+- Multi-strategy content extraction
+- Handles modern JavaScript-heavy websites
+- Robust error handling and recovery
+
+### 📊 PostgreSQL Integration
+- Secure database configuration
+- User-specific article storage
+- Efficient query optimization
+
+### 🔧 Management Tools
+- Custom Django management commands
+- Database maintenance utilities
+- Development and testing helpers
+
+## Architecture Overview
+
+### Service Layer Architecture
+```
+Client Request → Authentication → Views → Services → External APIs
+                                     ↓
+                                Scraping → AI Summarization
+                                     ↓
+                                Database Storage
+```
+
+### Data Flow
+1. **Authentication**: JWT token validation
+2. **News Fetching**: NewsAPI integration
+3. **Content Scraping**: Full article extraction
+4. **AI Summarization**: Transformer-based summarization
+5. **Data Storage**: PostgreSQL with user relationships
+
+## Development Workflow
+
+### Setup Development Environment
+```bash
+# Clone and setup
+git clone https://github.com/IAteNoodles/News_Summary.git
+cd News_Summary
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Setup database
+python manage.py migrate
+python manage.py createsuperuser
+
+# Run development server
+python manage.py runserver
+```
+
+### Testing
+```bash
+# Run all tests
+python manage.py test
+
+# Test specific module
+python manage.py test api
+
+# Test with coverage
+coverage run --source='.' manage.py test
+coverage report
+```
+
+### Database Management
+```bash
+# Create migrations
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+
+# Clear articles (custom command)
+python manage.py clear_articles
+```
+
+## Deployment
+
+### Production Checklist
+- [ ] Set `DEBUG = False` in settings
+- [ ] Configure proper database credentials
+- [ ] Set up environment variables
+- [ ] Configure static file serving
+- [ ] Set up proper logging
+- [ ] Configure CORS if needed
+- [ ] Set up monitoring and alerts
+
+### Docker Deployment (Future)
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["gunicorn", "news_summary_project.wsgi:application"]
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite
+6. Submit a pull request
+
+## License
+
+This project is developed as part of an internship assignment.
+
+## Support
+
+For technical questions or issues:
+1. Check the module-specific README files
+2. Review the Django documentation
+3. Check the API endpoint documentation
+4. Review the test files for usage examples
